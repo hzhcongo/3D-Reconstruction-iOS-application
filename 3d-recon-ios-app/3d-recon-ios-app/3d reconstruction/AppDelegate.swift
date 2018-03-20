@@ -5,6 +5,9 @@
 //  Created by jiasheng on 21/12/16.
 //  Copyright © 2016 jiasheng. All rights reserved.
 //
+//  Improved and refined by zehao since 20/2/18.
+//  Copyright © 2018 zehao. All rights reserved.
+//
 
 import UIKit
 
