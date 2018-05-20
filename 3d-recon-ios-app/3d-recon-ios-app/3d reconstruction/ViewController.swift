@@ -5,9 +5,6 @@
 //  Created by jiasheng on 21/12/16.
 //  Copyright © 2016 jiasheng. All rights reserved.
 //
-//  Improved and refined by zehao since 20/2/18.
-//  Copyright © 2018 zehao. All rights reserved.
-//
 
 import UIKit
 import AVFoundation
@@ -27,7 +24,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     @IBOutlet weak var qualitytext: UILabel!
     @IBOutlet weak var flashtext: UILabel!
     
-    
     var photoNumber = Float(20)
     var viewAngle = Float(180)
     var ip = String()
@@ -45,37 +41,36 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         ip = IPaddress.text!
     }
     
-    @IBAction func changePhotoQuality(_ sender: UIStepper) {
-        switch(sender.value){
-        case 0:
-            qualitytext.text = "Resolution: 352x288"
-            photoq=0
-        case 1:
-            qualitytext.text = "Resolution: 640x480"
-            photoq=1
-        case 2:
-            qualitytext.text = "Resolution: 1280x720"
-            photoq=2
-        case 3:
-            qualitytext.text = "Resolution: 1920x1080"
-            photoq=3
-        case 4:
-            qualitytext.text = "Resolution: 3840x2160"
-            photoq=4
-        default:
-            qualitytext.text = "Resolution: 352x288"
-            photoq=0
+    @IBAction func changeFlash(_ sender: UIButton) {
+        flashOn = !flashOn
+        if(flashOn){
+            flashtext.text = "Flash On"
+        }
+        else{
+            flashtext.text = "Flash Off"
         }
     }
     
-    @IBAction func changeFlash(_ sender: UISwitch) {
-        if(sender.isOn){
-            flashtext.text = "Flash: On"
-            flashOn = true
-        }
-        else{
-            flashtext.text = "Flash: Off"
-            flashOn = false
+    @IBAction func changePhotoQuality(_ sender: UIStepper) {
+        switch(sender.value){
+        case 0:
+            qualitytext.text = "352x288"
+            photoq=0
+        case 1:
+            qualitytext.text = "640x480"
+            photoq=1
+        case 2:
+            qualitytext.text = "1280x720"
+            photoq=2
+        case 3:
+            qualitytext.text = "1920x1080"
+            photoq=3
+        case 4:
+            qualitytext.text = "3840x2160"
+            photoq=4
+        default:
+            qualitytext.text = "unknown"
+            photoq=0
         }
     }
     
@@ -95,11 +90,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        
-        //    Set Start btn radius
-        cameraButton.layer.cornerRadius = 5
-        cameraButton.layer.borderColor = self.view.tintColor.cgColor
-        cameraButton.layer.borderWidth = 1
 
     }
 //    
@@ -137,4 +127,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
+
+
 }
+

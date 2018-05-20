@@ -5,16 +5,12 @@
 //  Created by jiasheng on 31/1/17.
 //  Copyright © 2017 jiasheng. All rights reserved.
 //
-//  Improved and refined by zehao since 20/2/18.
-//  Copyright © 2018 zehao. All rights reserved.
-//
 
 import UIKit
 import AVFoundation
 import CoreMotion
 
-class CameraViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, AVCapturePhotoCaptureDelegate
-    {
+class CameraViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, AVCapturePhotoCaptureDelegate	 {
 
     let manager = CMMotionManager()
     var IPaddress = String()
@@ -54,15 +50,16 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
             do {
                 try FileManager.default.createDirectory(atPath: appDir, withIntermediateDirectories: false, attributes: nil)
             }catch{
-                print("Error: Issue with FileManager")
+                print("Error: filemanager operation has issue")
             }
         }
     
         captureSession = AVCaptureSession()
+        
         capturePhotoOutput = AVCapturePhotoOutput()
         capturePhotoOutput.isHighResolutionCaptureEnabled=true
         
-        print("Photo quality level is ", photoq)
+        print("the photo quality level is ", photoq)
         switch(photoq){
         case 0:
             captureSession?.sessionPreset = AVCaptureSessionPreset352x288
@@ -119,11 +116,13 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
         super.viewDidAppear(animated)
         previewLayer!.frame = cameraView.bounds
         
-        print("viewAngle: ", viewAngle, ". PhotoNumber: ",photoNumber)
+        print("viewAngle is ", viewAngle, " and photoNumber is ",photoNumber)
         var nextDegree = viewAngle/Float(photoNumber)
-        print("nextDegree: ", nextDegree)
+        print("nextDegree is ", nextDegree)
         let interval = nextDegree
         nextDegreeText.text = String(Int(nextDegree))
+        
+
         
         manager.startDeviceMotionUpdates(to: OperationQueue.current!){
             (data,error) in
@@ -178,7 +177,7 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
     func capture(_ captureOutput: AVCapturePhotoOutput, didFinishProcessingPhotoSampleBuffer photoSampleBuffer: CMSampleBuffer?, previewPhotoSampleBuffer: CMSampleBuffer?, resolvedSettings: AVCaptureResolvedPhotoSettings, bracketSettings: AVCaptureBracketedStillImageSettings?, error: Error?) {
     
         if let error = error {
-            print("Error occured: \(error.localizedDescription)")
+            print("error occure : \(error.localizedDescription)")
         }
     
         if  let sampleBuffer = photoSampleBuffer,
@@ -194,7 +193,7 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
                     FileManager.default.createFile(atPath: self.appDir.appending("\(self.photoName).jpg"), contents: imageFile, attributes: nil)
                     self.photoName += 1
                 } else {
-                    print("Error: Can't create/save photo")
+                    print("some error here")
                     let settings = AVCapturePhotoSettings()
                     let previewPixelType = settings.availablePreviewPhotoPixelFormatTypes.first!
                     let previewFormat = [
@@ -211,6 +210,7 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
                         settings.flashMode = .on
                     }
                     self.capturePhotoOutput.capturePhoto(with: settings, delegate: self)
+            
                 }
     }
 
@@ -221,8 +221,8 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
         else{
             return Int(180/M_PI * radians)+360
         }
+        
     }
-    
     @IBAction func showImage(_ sender: UIButton) {
         let photoPath=appDir.appending("\(self.currentPhotoName).jpg")
         if FileManager.default.fileExists(atPath: photoPath){
@@ -232,11 +232,9 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
             print("No image")
         }
     }
-    
     func generateBoundaryString() -> String {
         return "Boundary-\(NSUUID().uuidString)"
     }
-    
     @IBAction func uploadToServer(_ sender: UIButton) {
         let url = NSURL(string: "http://"+IPaddress+"/upload")
         
@@ -265,11 +263,6 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
             }
         }
         
-//        Send model name
-        body.append("--\(boundary)\r\n".data(using: String.Encoding.utf8)!)
-        body.append("Content-Disposition:form-data; name=\"name\"\r\n\r\n".data(using: String.Encoding.utf8)!)
-        body.append("MODELNAME\r\n".data(using:String.Encoding.utf8)!)
-        
         body.append("--\(boundary)--\r\n".data(using: String.Encoding.utf8)!)
         
         request.httpBody = body as Data
@@ -278,10 +271,12 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
             data, response, error in
             
             if error != nil {
-                print("error: \(error)")
+                print("error=\(error)")
                 return
             }
-            print("******* response: \(response)")
+            
+            print("******* response = \(response)")
+            
         }
         
         task.resume()
@@ -322,4 +317,5 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
         }
         print("Done photo deletion")
     }
+
 }
