@@ -1,7 +1,5 @@
 # 3D-Reconstruction-iOS-application (Virtuaso)
-Final Year Project for B.Eng (Computer Sciens) in Nanyang Technological University.
-
-An iOS application that is integrated with Virtuaso's web application. <br>
+Virtuaso has an iOS application that is integrated with Virtuaso's web application. <br>
 It allows users to take images of objects that they want to process into a 3D model using 3D reconstruction.
 
 Main features:
