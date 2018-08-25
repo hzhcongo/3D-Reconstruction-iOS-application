@@ -1,5 +1,5 @@
-# 3D-Virtualisation-App (Virtuaso)
-Final Year Project on iOS
+# 3D-Reconstruction-iOS-application (Virtuaso)
+Final Year Project for Bachelor of Science (Computer Sciens) in NTU
 
 An iOS application that is integrated with Virtuaso's web application. <br>
 It allows users to take images of objects that they want to process into a 3D model using 3D reconstruction.
