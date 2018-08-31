@@ -287,7 +287,7 @@
 				DEVELOPMENT_TEAM = LK6HNU9QTJ;
 				INFOPLIST_FILE = "3d reconstruction/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.3DRecons;
+				PRODUCT_BUNDLE_IDENTIFIER = com.3DReconsTest;
 				PRODUCT_NAME = Virtuaso;
 				SWIFT_VERSION = 4.0;
 			};
@@ -300,7 +300,7 @@
 				DEVELOPMENT_TEAM = LK6HNU9QTJ;
 				INFOPLIST_FILE = "3d reconstruction/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.3DRecons;
+				PRODUCT_BUNDLE_IDENTIFIER = com.3DReconsTest;
 				PRODUCT_NAME = Virtuaso;
 				SWIFT_VERSION = 4.0;
 			};

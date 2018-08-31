@@ -115,6 +115,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        
         if ip.elementsEqual("") {
             ////ALERT DIALOG BOX
             // create the alert
@@ -126,10 +127,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             // show the alert
             self.present(alert, animated: true, completion: nil)
         }
-        else if modelname.elementsEqual("") {
+        else if modelname.elementsEqual("") || modelname.contains(" ") {
             ////ALERT DIALOG BOX
             // create the alert
-            let alert = UIAlertController(title: "Incomplete configuration", message: "Please enter your desired model name", preferredStyle: UIAlertControllerStyle.alert)
+            let alert = UIAlertController(title: "Missing or invalid name", message: "Please enter a name that contains no spaces", preferredStyle: UIAlertControllerStyle.alert)
             
             // add an action (button)
             alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: { (action: UIAlertAction!) in

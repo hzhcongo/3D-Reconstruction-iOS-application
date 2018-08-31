@@ -33,11 +33,20 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
     
     @IBOutlet weak var cameraView: UIView!
     @IBOutlet weak var takePhoto: UIButton!
+    @IBOutlet weak var takeTopPhotobtn: UIButton!
+    @IBOutlet weak var uploadPhotosbtn: UIButton!
     @IBOutlet weak var captureImageView: UIImageView!
+    @IBOutlet weak var loaderCircle: UIActivityIndicatorView!
+    
+    ////FOR UPLOADING
+    @objc var url = NSURL(string: "")
+    @objc var request = NSMutableURLRequest()
+    @objc var boundary = ""
+    @objc var body = NSMutableData()
+    ////
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
         // Do any additional setup after loading the view.
     }
 
@@ -91,14 +100,26 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
             print(error!.localizedDescription)
         }
         
+        /////FOR UPLOADING
+        url = NSURL(string: "http://"+IPaddress+"/upload")
+        request = NSMutableURLRequest(url: url! as URL)
+        request.httpMethod = "POST"
+        boundary = generateBoundaryString()
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        body.append("--\(boundary)\r\n".data(using: String.Encoding.utf8)!)
+        
+        body.append("Content-Disposition:form-data; name=\"modelname\"\r\n\r\n".data(using: String.Encoding.utf8)!)
+        body.append("\(modelname)\r\n".data(using:String.Encoding.utf8)!)
+        body.append("--\(boundary)\r\n".data(using: String.Encoding.utf8)!)
+        
+        body.append("Content-Disposition:form-data; name=\"quality\"\r\n\r\n".data(using:  String.Encoding.utf8)!)
+        body.append("\(modelq)\r\n".data(using:String.Encoding.utf8)!)
+        /////
+        
         if error == nil && captureSession!.canAddInput(input){
             captureSession!.addInput(input)
-//            stillImageOutput = AVCaptureStillImageOutput()
-//            stillImageOutput?.outputSettings = [AVVideoCodecKey: AVVideoCodecJPEG]
             if captureSession!.canAddOutput(capturePhotoOutput){
                 captureSession!.addOutput(capturePhotoOutput)
-//            if captureSession!.canAddOutput(stillImageOutput){
-//                captureSession!.addOutput(stillImageOutput)
                 previewLayer = AVCaptureVideoPreviewLayer(session: captureSession!)
                 previewLayer!.videoGravity = AVLayerVideoGravity.resizeAspect
                 previewLayer!.connection?.videoOrientation = AVCaptureVideoOrientation.portrait
@@ -108,18 +129,17 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
         }
     }
     
-//    @IBOutlet weak var pitch: UILabel!
     @IBOutlet weak var yaw: UILabel!
-//    @IBOutlet weak var roll: UILabel!
     
     @IBOutlet weak var photoProgressBar: UIProgressView!
     @IBOutlet weak var nextDegreeText: UILabel!
 
+    var starttaking = false
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-//        previewLayer!.frame = cameraView.bounds
-//        print(previewLayer!.frame)
-//        (0.0, 0.0, 375.0, 667.0)
+        
+        self.loaderCircle.isHidden = true;
         
         switch(photoq){
         case 0:
@@ -130,6 +150,19 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
             previewLayer!.frame = xyz
         }
         
+        ////ALERT DIALOG BOX
+        // create the alert
+        let alert2 = UIAlertController(title: "Position camera", message: "Before proceeding, please position the camera at a 20 to 35 degrees angle, to allow as much detail and surface area of the object to be consistently captured.", preferredStyle: UIAlertControllerStyle.alert)
+        // add an action (button)
+        alert2.addAction(UIAlertAction(title: "Start", style: UIAlertActionStyle.default, handler: {
+            action in self.startTaking();
+        }))
+        // show the alert
+        self.present(alert2, animated: true, completion: nil)
+    }
+
+    func startTaking(){
+        self.starttaking = true;
         print("viewAngle is ", viewAngle, " and photoNumber is ",photoNumber)
         var nextDegree = viewAngle/Float(photoNumber)
         print("nextDegree is ", nextDegree)
@@ -139,32 +172,33 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
         
         manager.startDeviceMotionUpdates(to: OperationQueue.current!){
             (data,error) in
-//            self.pitch.text = "\(self.degrees(radians: data!.attitude.pitch))"
             self.yaw.text?.removeAll()
             self.yaw.text = "\(self.degrees(radians: data!.attitude.yaw))"
-//            self.roll.text = "\(self.degrees(radians: data!.attitude.roll))"
             var tolerance = Float(1.5);
             if(interval/Float(5)>tolerance){
                 tolerance = interval/Float(5)
             }
             if(self.photosTaken == self.photoNumber){
                 self.manager.stopDeviceMotionUpdates();
+                self.starttaking = false
+                
                 ////ALERT DIALOG BOX
                 // create the alert
-                let alert = UIAlertController(title: "All images taken", message: "Please  select the 'Upload' button to submit taken images to the web server to generate the model", preferredStyle: UIAlertControllerStyle.alert)
-                
+                let alert2 = UIAlertController(title: "Top view", message: "Please position the camera above the object and take a photo", preferredStyle: UIAlertControllerStyle.alert)
                 // add an action (button)
-                alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil))
-                
+                alert2.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil))
                 // show the alert
-                self.present(alert, animated: true, completion: nil)
-//                self.uploadToServer(self)
+                self.present(alert2, animated: true, completion: nil)
+                self.takeTopPhotobtn.isHidden = false;
             }
-            else if (abs(Float(self.degrees(radians: data!.attitude.yaw))-nextDegree) < tolerance) {
+            else if (abs(Float(self.degrees(radians: data!.attitude.yaw))-nextDegree) < tolerance && self.starttaking) {
                 self.photoProgressBar.progress = nextDegree/self.viewAngle
-                nextDegree = nextDegree + interval
-                self.nextDegreeText.text?.removeAll()
-                self.nextDegreeText.text = String(nextDegree)
+                
+                if(self.photoName != self.photoNumber){
+                    nextDegree = nextDegree + interval
+                    self.nextDegreeText.text?.removeAll()
+                    self.nextDegreeText.text = String(nextDegree)
+                }
                 
                 let settings = AVCapturePhotoSettings()
                 let previewPixelType = settings.availablePreviewPhotoPixelFormatTypes.first!
@@ -183,25 +217,10 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
                 }
                 self.capturePhotoOutput.capturePhoto(with: settings, delegate: self)
                 self.photosTaken = self.photosTaken + 1;
-//                if let videoConnection = self.stillImageOutput!.connection(withMediaType: AVMediaTypeVideo) {
-//                    self.stillImageOutput?.captureStillImageAsynchronously(from: videoConnection, completionHandler: { (sampleBuffer, error) in
-//                        if sampleBuffer != nil {
-//                            let imageData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer)
-//                            let dataProvider = CGDataProvider.init(data: imageData as! CFData)
-//                            let cgImageRef = CGImage(jpegDataProviderSource: dataProvider!, decode: nil, shouldInterpolate: true, intent: CGColorRenderingIntent.defaultIntent)
-//                            
-//                            let image = UIImage(cgImage: cgImageRef!, scale: 1.0, orientation: UIImageOrientation.right)
-//                            self.captureImageView.image = image
-//                            let imageFile = UIImageJPEGRepresentation(image,1)
-//                            FileManager.default.createFile(atPath: self.appDir.appending("\(self.photoName).jpg"), contents: imageFile, attributes: nil)
-//                            self.photoName += 1
-//                        }
-//                    })
-                }
             }
         }
-//    }
-
+    }
+    
     func photoOutput(_ captureOutput: AVCapturePhotoOutput, didFinishProcessingPhoto photoSampleBuffer: CMSampleBuffer?, previewPhoto previewPhotoSampleBuffer: CMSampleBuffer?, resolvedSettings: AVCaptureResolvedPhotoSettings, bracketSettings: AVCaptureBracketedStillImageSettings?, error: Error?) {
     
         if let error = error {
@@ -219,8 +238,23 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
                     captureImageView.image = image
                     let imageFile = UIImageJPEGRepresentation(image,1)
                     FileManager.default.createFile(atPath: self.appDir.appending("\(self.photoName).jpg"), contents: imageFile, attributes: nil)
+                    print("Saved image \(self.photoName)")
+            
+                    let photoPath = self.appDir.appending("\(self.photoName).jpg")
+                    if FileManager.default.fileExists(atPath: photoPath){
+                        let image = UIImage(contentsOfFile: photoPath)
+                        let imageData = UIImageJPEGRepresentation(image!, 1)
+                        
+                        body.append("--\(boundary)\r\n".data(using: String.Encoding.utf8)!)
+                        body.append("Content-Disposition:form-data; name=\"file\"; filename=\"\(self.photoName).jpg\"\r\n".data(using: String.Encoding.utf8)!)
+                        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: String.Encoding.utf8)!)
+                        body.append(imageData!)
+                        body.append("\r\n".data(using: String.Encoding.utf8)!)
+                    }
+                    else{ print("error finding and coverting image \(self.photoName)") }
+            
                     self.photoName += 1
-                }
+        }
         else {
             print("some error here")
             let settings = AVCapturePhotoSettings()
@@ -252,6 +286,37 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
         }
     }
     
+    @IBAction func takeTopPhoto(_ sender: Any) {
+        //TAKE IMAGE
+        let settings = AVCapturePhotoSettings()
+        let previewPixelType = settings.availablePreviewPhotoPixelFormatTypes.first!
+        let previewFormat = [
+            kCVPixelBufferPixelFormatTypeKey as String: previewPixelType,
+            kCVPixelBufferWidthKey as String: 160,
+            kCVPixelBufferHeightKey as String: 160
+        ]
+        settings.previewPhotoFormat = previewFormat
+        settings.isAutoStillImageStabilizationEnabled = true
+        if(self.photoq == 4){
+            settings.isHighResolutionPhotoEnabled = true
+        }
+        if(self.flashOn){
+            settings.flashMode = .on
+        }
+        
+        self.capturePhotoOutput.capturePhoto(with: settings, delegate: self)
+        
+        ////ALERT DIALOG BOX
+        // create the alert
+        let alert = UIAlertController(title: "All images taken", message: "Please  select the 'Upload' button to submit taken images to the web server to generate the model", preferredStyle: UIAlertControllerStyle.alert)
+        // add an action (button)
+        alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil))
+        // show the alert
+        self.present(alert, animated: true, completion: nil)
+        self.uploadPhotosbtn.isHidden = false;
+        self.takeTopPhotobtn.isHidden = true;
+    }
+    
     @IBAction func showImage(_ sender: UIButton) {
         let photoPath=appDir.appending("\(self.currentPhotoName).jpg")
         print(photoPath)
@@ -270,94 +335,83 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
     
     @IBAction func uploadToServer(_ sender: Any) {
         if(photosTaken >= 10){
-            //TTD: SHOW LOADING SCREEN WHEN SENDING IMAGES
-//            let alert = UIAlertController(title: nil, message: "Please wait...", preferredStyle: .alert)
+            
+            self.uploadPhotosbtn.isHidden = true;
+            self.loaderCircle.isHidden=false;
+            self.loaderCircle.startAnimating();
+            
+            //////////
+//            url = NSURL(string: "http://"+IPaddress+"/upload")
+//            request = NSMutableURLRequest(url: url! as URL)
+//            request.httpMethod = "POST"
+//            boundary = generateBoundaryString()
+//            request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+//            body.append("--\(boundary)\r\n".data(using: String.Encoding.utf8)!)
 //
-//            alert.view.tintColor = UIColor.black
-//            let loadingIndicator: UIActivityIndicatorView = UIActivityIndicatorView(frame: CGRect(x:10,y:5,width:50,height:50)) as UIActivityIndicatorView
-//            loadingIndicator.hidesWhenStopped = true
-//            loadingIndicator.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.gray
-//            loadingIndicator.startAnimating();
+//            body.append("Content-Disposition:form-data; name=\"modelname\"\r\n\r\n".data(using: String.Encoding.utf8)!)
+//            body.append("\(modelname)\r\n".data(using:String.Encoding.utf8)!)
+//            body.append("--\(boundary)\r\n".data(using: String.Encoding.utf8)!)
 //
-//            alert.view.addSubview(loadingIndicator)
-//            present(alert, animated: true, completion: nil)
-
-            let url = NSURL(string: "http://"+IPaddress+"/upload")
-            
-            let request = NSMutableURLRequest(url: url! as URL)
-            request.httpMethod = "POST"
-            
-            let boundary = generateBoundaryString()
-            //TTD: NEED ADD SENDING OF MODEL QUALITY and name
-            request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-            let body = NSMutableData()
-            body.append("--\(boundary)\r\n".data(using: String.Encoding.utf8)!)
-            body.append("Content-Disposition:form-data; name=\"test\"\r\n\r\n".data(using: String.Encoding.utf8)!)
-            body.append("hi\r\n".data(using:String.Encoding.utf8)!)
-            
-            for i in 1...self.photoName{
-                let photoPath = self.appDir.appending("\(i).jpg")
-                if FileManager.default.fileExists(atPath: photoPath){
-                    let image = UIImage(contentsOfFile: photoPath)
-                    let imageData = UIImageJPEGRepresentation(image!, 1)
-     
-                    body.append("--\(boundary)\r\n".data(using: String.Encoding.utf8)!)
-                    body.append("Content-Disposition:form-data; name=\"file\"; filename=\"\(i).jpg\"\r\n".data(using: String.Encoding.utf8)!)
-                    body.append("Content-Type: image/jpeg\r\n\r\n".data(using: String.Encoding.utf8)!)
-                    body.append(imageData!)
-                    body.append("\r\n".data(using: String.Encoding.utf8)!)
-                }
-            }
+//            body.append("Content-Disposition:form-data; name=\"quality\"\r\n\r\n".data(using:  String.Encoding.utf8)!)
+//            body.append("\(modelq)\r\n".data(using:String.Encoding.utf8)!)
+//
+//            for i in 1...self.photoName{
+//                let photoPath = self.appDir.appending("\(i).jpg")
+//                if FileManager.default.fileExists(atPath: photoPath){
+//                    let image = UIImage(contentsOfFile: photoPath)
+//                    let imageData = UIImageJPEGRepresentation(image!, 1)
+//
+//                    body.append("--\(boundary)\r\n".data(using: String.Encoding.utf8)!)
+//                    body.append("Content-Disposition:form-data; name=\"file\"; filename=\"\(i).jpg\"\r\n".data(using: String.Encoding.utf8)!)
+//                    body.append("Content-Type: image/jpeg\r\n\r\n".data(using: String.Encoding.utf8)!)
+//                    body.append(imageData!)
+//                    body.append("\r\n".data(using: String.Encoding.utf8)!)
+//                }
+//            }
+//
+//            body.append("--\(boundary)--\r\n".data(using: String.Encoding.utf8)!)
+            ////////////////
             
             body.append("--\(boundary)--\r\n".data(using: String.Encoding.utf8)!)
             request.httpBody = body as Data
             
-            let task = URLSession.shared.dataTask(with: request as URLRequest) {
-                data, response, error in
-                
-                if error != nil {
-                    print("error=\(error)")
-                    return
-                }
-                
-                print("******* response = \(response)")
-                
-            }
-
-            task.resume()
+            let sessionConfig = URLSessionConfiguration.default
+            sessionConfig.timeoutIntervalForRequest = 99999999
+            sessionConfig.timeoutIntervalForResource = 99999999
+            let session = URLSession(configuration: sessionConfig)
             
-//            dismiss(animated: false, completion: nil)
-            self.performSegue(withIdentifier: "backMain", sender: nil)
+            let task = session.dataTask(with: request as URLRequest) {
+                data, response, error in
+
+                if error != nil {
+                    print("error=\(String(describing: error))")
+                    print("end")
+                }
+
+                print("******* response = \(String(describing: response))")
+                ///ALERT DIALOG BOX
+                // create the alert
+                let alert = UIAlertController(title: "Upload complete", message: "Please view the web app to process the images", preferredStyle: UIAlertControllerStyle.alert)
+                // add an action (button)
+                alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil))
+                // show the alert
+                self.present(alert, animated: true, completion: nil)
+                DispatchQueue.main.async { // Correct
+                    self.loaderCircle.stopAnimating();
+                    self.loaderCircle.isHidden=true;
+                    self.captureSession!.stopRunning();
+                }
+            }
+            task.resume()
         }
         else{
-            ////ALERT DIALOG BOX
             // create the alert
             let alert = UIAlertController(title: "Not enough images", message: "Please take at least 10 images to upload", preferredStyle: UIAlertControllerStyle.alert)
-            
             // add an action (button)
             alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil))
-            
             // show the alert
             self.present(alert, animated: true, completion: nil)
         }
-    }
-    
-    @IBAction func takePhoto(_ sender: UIButton) {
-//        if let videoConnection = self.stillImageOutput!.connection(withMediaType: AVMediaTypeVideo) {
-//            self.stillImageOutput?.captureStillImageAsynchronously(from: videoConnection, completionHandler: { (sampleBuffer, error) in
-//                if sampleBuffer != nil {
-//                    let imageData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer)
-//                    let dataProvider = CGDataProvider.init(data: imageData as! CFData)
-//                    let cgImageRef = CGImage(jpegDataProviderSource: dataProvider!, decode: nil, shouldInterpolate: true, intent: CGColorRenderingIntent.defaultIntent)
-//                    
-//                    let image = UIImage(cgImage: cgImageRef!, scale: 1.0, orientation: UIImageOrientation.right)
-//                    self.captureImageView.image = image
-//                    let imageFile = UIImageJPEGRepresentation(image,1)
-//                    FileManager.default.createFile(atPath: self.appDir.appending("\(self.photoName).jpg"), contents: imageFile, attributes: nil)
-//                    self.photoName += 1
-//                }
-//            })
-//        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
