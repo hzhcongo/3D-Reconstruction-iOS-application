@@ -12,6 +12,7 @@
 		0A725D391E0A7820006A221B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0A725D371E0A7820006A221B /* Main.storyboard */; };
 		0A725D3E1E0A7820006A221B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0A725D3C1E0A7820006A221B /* LaunchScreen.storyboard */; };
 		0AABE52C1E409C0500AF6484 /* CameraViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AABE52B1E409C0500AF6484 /* CameraViewController.swift */; };
+		CC68AA86214C9B050018A690 /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC68AA85214C9B050018A690 /* Reachability.swift */; };
 		CC85FB6D20B076A500364E70 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CC85FB6C20B076A500364E70 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +24,7 @@
 		0A725D3D1E0A7820006A221B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		0A725D3F1E0A7820006A221B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0AABE52B1E409C0500AF6484 /* CameraViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraViewController.swift; sourceTree = "<group>"; };
+		CC68AA85214C9B050018A690 /* Reachability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Reachability.swift; sourceTree = "<group>"; };
 		CC85FB6C20B076A500364E70 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -56,6 +58,7 @@
 		0A725D321E0A7820006A221B /* 3d reconstruction */ = {
 			isa = PBXGroup;
 			children = (
+				CC68AA85214C9B050018A690 /* Reachability.swift */,
 				0A725D331E0A7820006A221B /* AppDelegate.swift */,
 				0A725D351E0A7820006A221B /* ViewController.swift */,
 				0AABE52B1E409C0500AF6484 /* CameraViewController.swift */,
@@ -143,6 +146,7 @@
 			files = (
 				0A725D361E0A7820006A221B /* ViewController.swift in Sources */,
 				0A725D341E0A7820006A221B /* AppDelegate.swift in Sources */,
+				CC68AA86214C9B050018A690 /* Reachability.swift in Sources */,
 				0AABE52C1E409C0500AF6484 /* CameraViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

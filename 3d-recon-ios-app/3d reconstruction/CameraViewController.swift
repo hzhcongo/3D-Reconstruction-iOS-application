@@ -74,6 +74,7 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
         capturePhotoOutput.isHighResolutionCaptureEnabled=true
         
         print("Photo quality level is ", photoq)
+        print("Model quality level is ", modelq)
         switch(photoq){
         case 0:
             captureSession?.sessionPreset = AVCaptureSession.Preset.cif352x288
@@ -101,7 +102,7 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
         }
         
         /////FOR UPLOADING
-        url = NSURL(string: "http://"+IPaddress+"/upload")
+        url = NSURL(string: "http://"+IPaddress+":5000/upload")
         request = NSMutableURLRequest(url: url! as URL)
         request.httpMethod = "POST"
         boundary = generateBoundaryString()
@@ -152,7 +153,7 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
         
         ////ALERT DIALOG BOX
         // create the alert
-        let alert2 = UIAlertController(title: "Position camera", message: "Before proceeding, please position the camera at a 20 to 35 degrees angle, to allow as much detail and surface area of the object to be consistently captured.", preferredStyle: UIAlertControllerStyle.alert)
+        let alert2 = UIAlertController(title: "Prepare for image-taking", message: "Position the camera at a 20-35 degrees angle and allow as much detail and surface area of the object to be captured. Automatic image-taking will be done after selecting OK.", preferredStyle: UIAlertControllerStyle.alert)
         // add an action (button)
         alert2.addAction(UIAlertAction(title: "Start", style: UIAlertActionStyle.default, handler: {
             action in self.startTaking();
@@ -380,6 +381,7 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
             sessionConfig.timeoutIntervalForResource = 99999999
             let session = URLSession(configuration: sessionConfig)
             
+            print("start upload")
             let task = session.dataTask(with: request as URLRequest) {
                 data, response, error in
 

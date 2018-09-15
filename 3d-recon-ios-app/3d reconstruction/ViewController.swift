@@ -21,19 +21,26 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     @IBOutlet weak var cameraButton: UIButton!
     @IBOutlet weak var IPaddress: UITextField!
     @IBOutlet weak var modelName: UITextField!
+    @IBOutlet weak var numberinput: UITextField!
     @IBOutlet weak var numbertext: UILabel!
+    @IBOutlet weak var angleinput: UITextField!
     @IBOutlet weak var angletext: UILabel!
     @IBOutlet weak var qualityInput: UILabel!
+    @IBOutlet weak var dimensioninput: UISegmentedControl!
     @IBOutlet weak var flashswitch: UISwitch!
     @IBOutlet weak var modelQControl: UISegmentedControl!
+    @IBOutlet weak var photoNumSlider: UISlider!
+    @IBOutlet weak var viewAngleSlider: UISlider!
     
-    @objc var photoNumber = Float(30)
-    @objc var viewAngle = Float(180)
-    @objc var ip = String("192.168.0.157:5000")
+    @objc var photoNumber = Int(60)
+    @objc var viewAngle = Int(360)
+    @objc var ip = String("192.168.0.157")
     @objc var modelname = String()
     @objc var photoq = Int(3)
-    @objc var modelq = Int(0)
+    @objc var modelq = Int(2)
     @objc var flashOn = false
+    
+    let reachability = Reachability()!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -47,25 +54,116 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         view.addGestureRecognizer(tap)
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        self.tabBarController?.navigationItem.title = "Menu"
+        
+        setUpReachability();
+        
+        if(reachability.connection == .none){////ALERT DIALOG BOX
+            // create the alert
+            let alert = UIAlertController(title: "Not connected", message: "Please connect to the internet first", preferredStyle: UIAlertControllerStyle.alert)
+            
+            // add an action (button)
+            alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: {
+                action in self.setUpReachability();
+            }))
+            // show the alert
+            self.present(alert, animated: true, completion: nil)
+        }
+    }
+    
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
+    
+    func setUpReachability()
+    {
+        //declare this property where it won't go out of scope relative to your listener
+        DispatchQueue.main.async {
+            
+            self.reachability.whenReachable = { reachability in
+                if reachability.connection == .wifi {
+                    print("Reachable via WiFi")
+                } else {
+                    print("Reachable via Cellular")
+                }
+            }
+            self.self.reachability.whenUnreachable = { _ in
+                print("Not reachable")
+                
+            }
+            
+            do {
+                try self.reachability.startNotifier()
+            } catch {
+                print("Unable to start notifier")
+            }
+            
+        }
+    }
+    
     //Calls this function when the tap is recognized.
     @objc func dismissKeyboard() {
         //Causes the view (or one of its embedded text fields) to resign the first responder status.
         view.endEditing(true)
     }
-
     
     @IBAction func changePhotoNumber(_ sender: UISlider) {
-        photoNumber = sender.value
-        numbertext.text = String(Int(photoNumber))
+        photoNumber = Int(sender.value)
+        numberinput.text = String(photoNumber)
+        print(String(sender.value))
+    }
+    
+    @IBAction func photoNumChange(_ sender: UITextField) {
+        let newNum = Int(sender.text!)
+        if(newNum == nil || newNum! < 0 || newNum! > 90){
+            sender.text = String(photoNumber)
+            
+            ////ALERT DIALOG BOX
+            // create the alert
+            let alert = UIAlertController(title: "Invalid number of photos", message: "Please enter an integer value between 0 and 60", preferredStyle: UIAlertControllerStyle.alert)
+            
+            // add an action (button)
+            alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil))
+            // show the alert
+            self.present(alert, animated: true, completion: nil)
+        }
+        else{
+            photoNumber = newNum!
+        }
+        photoNumSlider.setValue(Float(photoNumber), animated: true)
     }
     
     @IBAction func changeViewAngle(_ sender: UISlider) {
-        viewAngle = sender.value
-        angletext.text = String(Int(viewAngle))
+        viewAngle = Int(sender.value)
+        angleinput.text = String(viewAngle)
+        print(String(sender.value))
+    }
+    
+    @IBAction func viewAngleChange(_ sender: UITextField) {
+        let newNum = Int(sender.text!)
+        if(newNum == nil || newNum! < 90 || newNum! > 360){
+            sender.text = String(viewAngle)
+            
+            ////ALERT DIALOG BOX
+            // create the alert
+            let alert = UIAlertController(title: "Invalid viewing angle", message: "Please enter an integer value between 90 and 360", preferredStyle: UIAlertControllerStyle.alert)
+            
+            // add an action (button)
+            alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil))
+            // show the alert
+            self.present(alert, animated: true, completion: nil)
+        }
+        else{
+            viewAngle = newNum!
+        }
+        viewAngleSlider.setValue(Float(viewAngle), animated: true)
     }
     
     @IBAction func changePhotoDims(_ sender: UISlider) {
         photoq = Int(sender.value)
+        print(photoq)
         
         switch(photoq){
             case 0:
@@ -82,19 +180,41 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             qualityInput.text = "352x288"
         }
     }
+    @IBAction func changeDims(_ sender: UISegmentedControl) {
+        photoq = Int(sender.selectedSegmentIndex)
+        print(photoq)
+    }
+    
+//    func verifyUrl (urlString: String?) -> Bool {
+//        //Check for nil
+//        if let urlString = urlString {
+//            // create NSURL instance
+//            if let url = NSURL(string: urlString) {
+//                // check if your application can open the NSURL instance
+//                print("url valid", UIApplication.shared.canOpenURL(url as URL))
+//                return UIApplication.shared.canOpenURL(url as URL)
+//            }
+//        }
+//        return false
+//    }
     
     @IBAction func changeIPaddress(_ sender: Any) {
-        ip = IPaddress.text!
-        
-//        ////ALERT DIALOG BOX
-//        // create the alert
-//        let alert = UIAlertController(title: "IP", message: ip, preferredStyle: UIAlertControllerStyle.alert)
+//        if(verifyUrl(urlString: ("http://" + IPaddress.text!)) == false){
+//            IPaddress.text! = ip
+//            ////ALERT DIALOG BOX
+//            // create the alert
+//            let alert = UIAlertController(title: "Unreachable IP address", message: "The IP address is unreachable. Check your internet connection and the IP address again.", preferredStyle: UIAlertControllerStyle.alert)
 //
-//        // add an action (button)
-//        alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil))
-//
-//        // show the alert
-//        self.present(alert, animated: true, completion: nil)
+//            // add an action (button)
+//            alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: {
+//                action in self.setUpReachability();
+//            }))
+//            // show the alert
+//            self.present(alert, animated: true, completion: nil)
+//        }
+//        else{
+            ip = IPaddress.text!
+//        }
     }
     
     @IBAction func modelNamechanged(_ sender: Any) {
@@ -138,25 +258,28 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             }))
             self.present(alert, animated: true, completion: nil)
         }
+        else if(reachability.connection == .none){
+            ////ALERT DIALOG BOX
+            // create the alert
+            let alert = UIAlertController(title: "Not connected", message: "Please connect to the internet first", preferredStyle: UIAlertControllerStyle.alert)
+            
+            // add an action (button)
+            alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: {
+                action in self.setUpReachability();
+            }))
+            // show the alert
+            self.present(alert, animated: true, completion: nil)
+        }
         else{
             let DestViewController :CameraViewController = segue.destination as! CameraViewController
             DestViewController.IPaddress = ip
             DestViewController.modelname = modelname
-            DestViewController.viewAngle = viewAngle
+            DestViewController.viewAngle = Float(viewAngle)
             DestViewController.photoNumber = Int(photoNumber)
             DestViewController.photoq = photoq
             DestViewController.flashOn = flashOn
             DestViewController.modelq = modelq
-            print("Angle photoNumber IPaddress modelname", viewAngle, ", ", photoNumber, ", ", ip, ", ", modelname)
+            print("Angle ", viewAngle, ", photoNumber ", photoNumber, ", IPaddress ", ip, ", modelname ", modelname)
         }
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        self.tabBarController?.navigationItem.title = "Menu"
-    }
-    
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
     }
 }
